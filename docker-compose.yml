@@ -1,0 +1,41 @@
+version: "3"
+
+services:
+  mongodb:
+    image: mongo
+    container_name: my_database
+    ports:
+      - "27017:27107"
+
+  mongo-seed_2:
+    image: 3011200030112000/mongo-seed
+    # build: ./mongo-seed
+    depends_on:
+      - mongodb
+    links:
+      - mongodb
+
+  open-tracing:
+    image: jaegertracing/all-in-one
+    container_name: tracer
+    ports:
+      - "14269"
+      - "5778:5778"
+      - "14268:14268"
+      - "14267"
+      - "16686:16686"
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+
+  server-app:
+    container_name: hotel-app-server
+    build: .
+    # image: 3011200030112000/http-server:1.1
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb
+      - mongo-seed_2
+      - open-tracing
+    entrypoint: ["app-exe", "start"]
